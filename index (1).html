@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotina Estratégica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --bg2: #161616;
+  --bg3: #1e1e1e;
+  --bg4: #252525;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0ede8;
+  --text2: #9a9690;
+  --text3: #5c5a57;
+  --green: #3ecf8e;
+  --green2: #1a6644;
+  --green3: rgba(62,207,142,0.12);
+  --amber: #f5a623;
+  --amber2: rgba(245,166,35,0.12);
+  --red: #e5534b;
+  --red2: rgba(229,83,75,0.12);
+  --purple: #a78bfa;
+  --purple2: rgba(167,139,250,0.12);
+  --radius: 10px;
+  --radius2: 14px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Layout */
+.container { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+/* Header */
+.header { margin-bottom: 2rem; }
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .25rem; }
+.logo { display: flex; align-items: center; gap: .6rem; }
+.logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+.header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: -.01em; }
+.header-sub { font-size: .8rem; color: var(--text2); }
+.today-badge {
+  font-family: var(--mono);
+  font-size: .7rem;
+  color: var(--text3);
+  background: var(--bg3);
+  border: .5px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg2);
+  border: .5px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+.tab {
+  flex: 1;
+  font-family: var(--font);
+  font-size: .78rem;
+  font-weight: 500;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  color: var(--text2);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.tab:hover { color: var(--text); background: var(--bg3); }
+.tab.on { background: var(--bg4); color: var(--text); box-shadow: inset 0 0 0 .5px var(--border2); }
+
+/* Views */
+.view { display: none; }
+.view.on { display: block; }
+
+/* Cards */
+.card {
+  background: var(--bg2);
+  border: .5px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.25rem;
+  margin-bottom: .75rem;
+}
+.card-title {
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 1rem;
+}
+
+/* Metrics grid */
+.mgrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: .75rem;
+}
+@media (max-width: 480px) { .mgrid { grid-template-columns: repeat(2, 1fr); } }
+.mc {
+  background: var(--bg2);
+  border: .5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+}
+.mc-label { font-size: .68rem; color: var(--text3); margin-bottom: 4px; }
+.mc-val { font-size: 1.2rem; font-weight: 600; color: var(--text); font-family: var(--mono); }
+.mc-val.g { color: var(--green); }
+
+/* Ring + info */
+.ring-row { display: flex; align-items: center; gap: 1.25rem; padding: .5rem 0; }
+.ring-svg { flex-shrink: 0; }
+.ring-pct { font-size: 1.75rem; font-weight: 600; color: var(--green); font-family: var(--mono); }
+.ring-day { font-size: .95rem; font-weight: 500; color: var(--text); margin-top: 2px; }
+.ring-date { font-size: .75rem; color: var(--text2); margin-top: 2px; }
+
+/* Timeline */
+.tl-row { display: flex; gap: 10px; margin-bottom: 0; }
+.tl-time { font-size: .7rem; color: var(--text3); font-family: var(--mono); min-width: 48px; padding-top: 14px; text-align: right; }
+.tl-bar { display: flex; flex-direction: column; align-items: center; }
+.tl-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  background: var(--bg);
+  margin-top: 14px; flex-shrink: 0;
+  transition: all .2s;
+}
+.tl-dot.dn { background: var(--green); border-color: var(--green); box-shadow: 0 0 6px var(--green); }
+.tl-line { width: 1px; background: var(--border); flex: 1; min-height: 14px; }
+.tl-content { flex: 1; padding: 8px 0 16px; }
+.tl-title { font-size: .85rem; font-weight: 500; color: var(--text); }
+.tl-sub { font-size: .75rem; color: var(--text2); margin-top: 2px; }
+.tl-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font); font-size: .72rem;
+  background: var(--bg3); border: .5px solid var(--border);
+  color: var(--text2); border-radius: 6px;
+  padding: 3px 10px; margin-top: 6px; cursor: pointer;
+  transition: all .15s;
+}
+.tl-btn:hover { border-color: var(--border2); color: var(--text); }
+.tl-btn.dn { background: var(--green3); border-color: var(--green2); color: var(--green); }
+
+/* Checklist */
+.ci {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: .5px solid var(--border);
+  cursor: pointer; transition: opacity .1s;
+}
+.ci:last-child { border-bottom: none; }
+.ci:hover { opacity: .85; }
+.cb {
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 1.5px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.cb.ck { background: var(--green); border-color: var(--green); }
+.cl { font-size: .85rem; color: var(--text); transition: all .15s; }
+.cl.ck { color: var(--text3); text-decoration: line-through; }
+
+/* Textarea */
+textarea {
+  width: 100%; font-size: .82rem; font-family: var(--font);
+  padding: 8px 10px; border: .5px solid var(--border);
+  border-radius: var(--radius); background: var(--bg3);
+  color: var(--text); resize: none; line-height: 1.5;
+  transition: border-color .15s;
+}
+textarea:focus { outline: none; border-color: var(--border2); }
+textarea::placeholder { color: var(--text3); }
+.pq { font-size: .82rem; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+.pq-block { display: flex; flex-direction: column; gap: 12px; }
+
+/* Finance */
+.fin-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: .5px solid var(--border);
+  font-size: .82rem;
+}
+.fin-row:last-child { border-bottom: none; }
+.fl { color: var(--text2); }
+.fv { font-weight: 600; font-family: var(--mono); color: var(--text); }
+.fv.g { color: var(--green); }
+.fv.r { color: var(--red); }
+.ni {
+  width: 90px; text-align: right;
+  font-size: .82rem; font-family: var(--mono);
+  padding: 5px 9px; border: .5px solid var(--border);
+  border-radius: 7px; background: var(--bg3);
+  color: var(--text); transition: border-color .15s;
+}
+.ni:focus { outline: none; border-color: var(--border2); }
+.fin-total {
+  border-top: .5px solid var(--border2) !important;
+  padding-top: 12px !important; margin-top: 4px;
+}
+
+/* Save button */
+.sbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 1rem; font-family: var(--font); font-size: .8rem;
+  font-weight: 500; padding: 7px 16px;
+  background: var(--bg3); border: .5px solid var(--border2);
+  border-radius: var(--radius); color: var(--text2);
+  cursor: pointer; transition: all .15s;
+}
+.sbtn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+.sbtn.ok { border-color: var(--green2); color: var(--green); background: var(--green3); }
+
+/* Badges */
+.badge {
+  display: inline-block; font-size: .7rem; font-weight: 500;
+  padding: 3px 9px; border-radius: 6px; margin: 3px 3px 3px 0;
+}
+.bg-g { background: var(--green3); color: var(--green); }
+.bg-p { background: var(--purple2); color: var(--purple); }
+.bg-a { background: var(--amber2); color: var(--amber); }
+.status-badge {
+  font-size: .72rem; font-weight: 500; padding: 3px 10px;
+  border-radius: 6px;
+}
+.st-above { background: var(--red2); color: var(--red); }
+.st-ok { background: var(--amber2); color: var(--amber); }
+.st-done { background: var(--green3); color: var(--green); }
+
+/* Week grid */
+.wgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 1rem; }
+.dc {
+  background: var(--bg3); border: .5px solid var(--border);
+  border-radius: var(--radius); padding: 10px 6px; text-align: center;
+}
+.dc.td { background: var(--green3); border-color: var(--green2); }
+.dc-name { font-size: .78rem; font-weight: 600; color: var(--text2); margin-bottom: 3px; }
+.dc-theme { font-size: .65rem; color: var(--text3); line-height: 1.3; }
+.dc.td .dc-name { color: var(--green); }
+.dc.td .dc-theme { color: #3ecf8e99; }
+
+/* Quote block */
+.quote {
+  border-left: 2px solid var(--green2);
+  padding: .6rem 1rem;
+  background: var(--green3);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 1rem 0 .5rem;
+  font-size: .82rem;
+  color: var(--text2);
+  font-style: italic;
+}
+
+/* Progress bar */
+.pbar-wrap { height: 4px; background: var(--bg4); border-radius: 2px; margin-top: 8px; }
+.pbar { height: 4px; background: var(--green); border-radius: 2px; transition: width .4s ease; box-shadow: 0 0 6px var(--green); }
+
+/* Separator */
+.sep { height: .5px; background: var(--border); margin: 1rem 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        <h1>Rotina Estratégica</h1>
+      </div>
+      <div class="today-badge" id="todayBadge"></div>
+    </div>
+    <div class="header-sub">Transformação pessoal e financeira — acompanhamento diário</div>
+  </div>
+
+  <div class="tabs" id="tabsEl">
+    <button class="tab on" data-tab="hoje">Hoje</button>
+    <button class="tab" data-tab="checklist">Checklist</button>
+    <button class="tab" data-tab="financeiro">Financeiro</button>
+    <button class="tab" data-tab="plano">Planejamento</button>
+    <button class="tab" data-tab="semana">Semana</button>
+  </div>
+
+  <!-- HOJE -->
+  <div id="hoje" class="view on">
+    <div class="mgrid">
+      <div class="mc"><div class="mc-label">Progresso</div><div class="mc-val g" id="m0">0%</div></div>
+      <div class="mc"><div class="mc-label">Tarefas</div><div class="mc-val" id="m1">0/7</div></div>
+      <div class="mc"><div class="mc-label">Meta (R$)</div><div class="mc-val" id="m2">—</div></div>
+      <div class="mc"><div class="mc-label">Lucro hoje</div><div class="mc-val g" id="m3">R$ 0</div></div>
+    </div>
+    <div class="card">
+      <div class="ring-row">
+        <svg class="ring-svg" width="76" height="76" viewBox="0 0 76 76">
+          <circle cx="38" cy="38" r="30" fill="none" stroke="#252525" stroke-width="6"/>
+          <circle id="ring" cx="38" cy="38" r="30" fill="none" stroke="#3ecf8e" stroke-width="6"
+            stroke-dasharray="188.5" stroke-dashoffset="188.5" stroke-linecap="round"
+            transform="rotate(-90 38 38)" style="transition:stroke-dashoffset .5s ease;filter:drop-shadow(0 0 4px #3ecf8e)"/>
+          <text x="38" y="43" text-anchor="middle" font-size="13" font-weight="600"
+            fill="#3ecf8e" font-family="'DM Mono',monospace" id="rtext">0%</text>
+        </svg>
+        <div>
+          <div class="ring-pct" id="rpct">0%</div>
+          <div class="ring-day" id="rday"></div>
+          <div class="ring-date" id="rdate"></div>
+          <div class="pbar-wrap" style="width:180px;margin-top:10px">
+            <div class="pbar" id="pbar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-title" style="margin-top:.25rem">Blocos do dia</div>
+    <div id="tl"></div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div id="checklist" class="view">
+    <div class="card">
+      <div class="card-title">Checklist diário</div>
+      <div id="cl"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Análise diária</div>
+      <div class="pq-block" id="al"></div>
+    </div>
+  </div>
+
+  <!-- FINANCEIRO -->
+  <div id="financeiro" class="view">
+    <div class="card">
+      <div class="card-title">Registro de hoje</div>
+      <div class="fin-row"><span class="fl">Valor bruto recebido (R$)</span><input class="ni" id="f0" type="number" min="0" step="0.01" value="0"></div>
+      <div class="fin-row"><span class="fl">Combustível (R$)</span><input class="ni" id="f1" type="number" min="0" step="0.01" value="0"></div>
+      <div class="fin-row"><span class="fl">KM rodados</span><input class="ni" id="f2" type="number" min="0" value="0"></div>
+      <div class="fin-row"><span class="fl">Outros gastos (R$)</span><input class="ni" id="f3" type="number" min="0" step="0.01" value="0"></div>
+      <div class="fin-row fin-total">
+        <span style="font-size:.85rem;font-weight:600;color:#f0ede8">Lucro líquido</span>
+        <span class="fv g" id="fliq">R$ 0,00</span>
+      </div>
+      <div class="fin-row">
+        <span class="fl">Status da meta</span>
+        <span class="status-badge st-above" id="fstatus">Abaixo da meta</span>
+      </div>
+      <button class="sbtn" id="btnSalvar">💾 Salvar registro do dia</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Acumulado da semana</div>
+      <div id="sacc"></div>
+    </div>
+  </div>
+
+  <!-- PLANEJAMENTO -->
+  <div id="plano" class="view">
+    <div class="card">
+      <div class="card-title">Planejamento do dia seguinte</div>
+      <div class="pq-block" id="pqs"></div>
+      <button class="sbtn" id="btnPlan">💾 Salvar planejamento</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Objetivos de 12 meses</div>
+      <div>
+        <span class="badge bg-g">Clareza mental</span>
+        <span class="badge bg-g">Reserva financeira</span>
+        <span class="badge bg-p">Disciplina</span>
+        <span class="badge bg-p">Inteligência estratégica</span>
+        <span class="badge bg-g">Estabilidade emocional</span>
+        <span class="badge bg-p">Visão empreendedora</span>
+        <span class="badge bg-a">Independência progressiva</span>
+      </div>
+      <div class="quote">Sua transformação agora depende de constância, direção e execução diária.</div>
+    </div>
+  </div>
+
+  <!-- SEMANA -->
+  <div id="semana" class="view">
+    <div class="card">
+      <div class="card-title">Estrutura intelectual semanal</div>
+      <div class="wgrid" id="wg"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Desempenho financeiro semanal</div>
+      <div id="wp"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var BLOCKS = [
+    { t: '05h40', n: 'Despertar', s: 'Água · higiene · sem celular', k: 'b0' },
+    { t: '05h45', n: 'Bloco mental', s: 'Leitura 20min · reflexão 10min · planejamento 10min', k: 'b1' },
+    { t: '06h25', n: 'Preparação', s: 'Higiene · café · mochila · saída', k: 'b2' },
+    { t: '07h00', n: 'Trânsito (ida)', s: 'Podcast · audiobook · conteúdo estratégico', k: 'b3' },
+    { t: '08h00', n: 'Trabalho gerencial', s: 'Observar: vendas, liderança, gestão, negociação', k: 'b4' },
+    { t: '18h00', n: 'Trânsito (volta)', s: 'Reset mental · música calma · silêncio', k: 'b5' },
+    { t: '18h40', n: 'Preparação entregas', s: 'Lanche · apps · meta da noite', k: 'b6' },
+    { t: '19h00', n: 'Operação entregas', s: 'Meta: R$ 80–120 (seg–qui) · R$ 130–180 (sex)', k: 'b7' },
+    { t: '22h15', n: 'Fechamento do dia', s: 'Registro financeiro · análise · planejamento amanhã', k: 'b8' },
+    { t: '22h40', n: 'Descompressão', s: 'Banho · leitura leve · música · silêncio', k: 'b9' },
+    { t: '23h10', n: 'Dormir', s: 'Recuperação física e mental', k: 'b10' }
+  ];
+  var CL = [
+    { k: 'c0', l: 'Li 10 páginas hoje' },
+    { k: 'c1', l: 'Controlei meu emocional' },
+    { k: 'c2', l: 'Mantive foco no trabalho' },
+    { k: 'c3', l: 'Fiz entregas com disciplina' },
+    { k: 'c4', l: 'Registrei ganhos e gastos' },
+    { k: 'c5', l: 'Fiz análise diária' },
+    { k: 'c6', l: 'Planejei amanhã' }
+  ];
+  var AL = [
+    { k: 'a0', l: 'Fui produtivo no trabalho?' },
+    { k: 'a1', l: 'Me comuniquei bem?' },
+    { k: 'a2', l: 'Qual região mais lucrativa nas entregas?' },
+    { k: 'a3', l: 'Fiquei disperso ou procrastinei?' },
+    { k: 'a4', l: 'Aprendi algo novo hoje?' }
+  ];
+  var PQ = [
+    { k: 'p0', l: 'Qual meu foco amanhã?' },
+    { k: 'p1', l: 'Qual minha meta financeira?' },
+    { k: 'p2', l: 'Como vou controlar minha energia?' },
+    { k: 'p3', l: 'O que preciso melhorar?' }
+  ];
+  var THEMES = ['—', 'Finanças', 'Comunicação e liderança', 'Negócios e vendas', 'Inteligência emocional', 'Planejamento de futuro', '—'];
+  var DNAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  var DSHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  var now = new Date();
+  var dow = now.getDay();
+  var todayKey = now.toISOString().slice(0, 10);
+
+  // State with localStorage
+  function loadState() {
+    try {
+      var raw = localStorage.getItem('rotina_v1');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { bd: {}, ck: {}, al: {}, pq: {}, fin: { b: 0, c: 0, k: 0, o: 0 }, sem: {} };
+  }
+  function saveState() {
+    try { localStorage.setItem('rotina_v1', JSON.stringify(S)); } catch (e) {}
+  }
+
+  var S = loadState();
+
+  // Auto-reset diário: se o último dia salvo não for hoje, limpa checks e blocos
+  if (S.lastDay && S.lastDay !== todayKey) {
+    S.bd = {};
+    S.ck = {};
+    S.al = {};
+    S.fin = { b: 0, c: 0, k: 0, o: 0 };
+  }
+  S.lastDay = todayKey;
+  saveState();
+
+  // Header date
+  document.getElementById('todayBadge').textContent =
+    now.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+
+  // Tabs
+  document.getElementById('tabsEl').addEventListener('click', function (e) {
+    var btn = e.target.closest('.tab');
+    if (!btn) return;
+    var tid = btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('on'); });
+    btn.classList.add('on');
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('on'); });
+    document.getElementById(tid).classList.add('on');
+  });
+
+  function getPct() {
+    var d = CL.filter(function (c) { return S.ck[c.k]; }).length;
+    return { d: d, t: CL.length, p: Math.round(d / CL.length * 100) };
+  }
+  function getLiq() {
+    return (S.fin.b || 0) - (S.fin.c || 0) - (S.fin.o || 0);
+  }
+
+  function updateMetrics() {
+    var r = getPct();
+    document.getElementById('m0').textContent = r.p + '%';
+    document.getElementById('m1').textContent = r.d + '/' + r.t;
+    document.getElementById('m2').textContent = dow === 5 ? '130–180' : '80–120';
+    var l = getLiq();
+    document.getElementById('m3').textContent = 'R$ ' + l.toFixed(2);
+
+    var circ = 188.5, off = circ - (circ * r.p / 100);
+    document.getElementById('ring').style.strokeDashoffset = off;
+    document.getElementById('rtext').textContent = r.p + '%';
+    document.getElementById('rpct').textContent = r.p + '%';
+    document.getElementById('pbar').style.width = r.p + '%';
+
+    var dn = DNAMES[dow];
+    document.getElementById('rday').textContent = (dow >= 1 && dow <= 5) ? dn + '-feira' : dn;
+    document.getElementById('rdate').textContent =
+      now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
+
+  function renderTimeline() {
+    var el = document.getElementById('tl');
+    var h = '';
+    BLOCKS.forEach(function (b, i) {
+      var dn = S.bd[b.k];
+      var last = i === BLOCKS.length - 1;
+      h += '<div class="tl-row">' +
+        '<div class="tl-time">' + b.t + '</div>' +
+        '<div class="tl-bar"><div class="tl-dot' + (dn ? ' dn' : '') + '"></div>' +
+        (last ? '' : '<div class="tl-line"></div>') + '</div>' +
+        '<div class="tl-content">' +
+        '<div class="tl-title">' + b.n + '</div>' +
+        '<div class="tl-sub">' + b.s + '</div>' +
+        '<button class="tl-btn' + (dn ? ' dn' : '') + '" data-bk="' + b.k + '">' +
+        (dn ? '✓ Concluído' : 'Marcar como feito') + '</button>' +
+        '</div></div>';
+    });
+    el.innerHTML = h;
+    el.querySelectorAll('.tl-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        S.bd[btn.dataset.bk] = !S.bd[btn.dataset.bk];
+        saveState(); renderTimeline();
+      });
+    });
+  }
+
+  function renderChecklist() {
+    var el = document.getElementById('cl');
+    var h = '';
+    CL.forEach(function (c) {
+      var ck = S.ck[c.k];
+      h += '<div class="ci" data-ck="' + c.k + '">' +
+        '<div class="cb' + (ck ? ' ck' : '') + '">' +
+        (ck ? '<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2" stroke="#0f0f0f" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '') +
+        '</div><div class="cl' + (ck ? ' ck' : '') + '">' + c.l + '</div></div>';
+    });
+    el.innerHTML = h;
+    el.querySelectorAll('.ci').forEach(function (row) {
+      row.addEventListener('click', function () {
+        S.ck[row.dataset.ck] = !S.ck[row.dataset.ck];
+        saveState(); renderChecklist(); updateMetrics();
+      });
+    });
+  }
+
+  function renderAnalise() {
+    var el = document.getElementById('al');
+    if (el.children.length) return;
+    AL.forEach(function (a) {
+      var d = document.createElement('div');
+      var p = document.createElement('div'); p.className = 'pq'; p.textContent = a.l;
+      var tx = document.createElement('textarea'); tx.rows = 2; tx.placeholder = 'Sua resposta...';
+      tx.value = S.al[a.k] || '';
+      tx.addEventListener('input', function () { S.al[a.k] = tx.value; saveState(); });
+      d.appendChild(p); d.appendChild(tx); el.appendChild(d);
+    });
+  }
+
+  function calcFin() {
+    S.fin.b = parseFloat(document.getElementById('f0').value) || 0;
+    S.fin.c = parseFloat(document.getElementById('f1').value) || 0;
+    S.fin.k = parseFloat(document.getElementById('f2').value) || 0;
+    S.fin.o = parseFloat(document.getElementById('f3').value) || 0;
+    var l = getLiq();
+    document.getElementById('fliq').textContent = 'R$ ' + l.toFixed(2);
+    var st = document.getElementById('fstatus');
+    var fri = dow === 5, lo = fri ? 130 : 80, hi = fri ? 180 : 120;
+    if (l >= hi) { st.textContent = 'Meta atingida ✓'; st.className = 'status-badge st-done'; }
+    else if (l >= lo) { st.textContent = 'Na faixa'; st.className = 'status-badge st-ok'; }
+    else { st.textContent = 'Abaixo da meta'; st.className = 'status-badge st-above'; }
+    updateMetrics();
+    renderSemAcc();
+    saveState();
+  }
+
+  function renderSemAcc() {
+    var el = document.getElementById('sacc');
+    var h = '', total = 0;
+    for (var i = 1; i <= 5; i++) {
+      var d = new Date(now); d.setDate(now.getDate() - (dow - i));
+      var k = d.toISOString().slice(0, 10);
+      var rec = S.sem[k];
+      var v = rec ? rec.b - rec.c - rec.o : null;
+      if (v && v > 0) total += v;
+      h += '<div class="fin-row"><span class="fl">' + DNAMES[i] + '</span>' +
+        '<span class="fv' + (v && v > 0 ? ' g' : '') + '">' +
+        (v && v > 0 ? 'R$ ' + v.toFixed(2) : '—') + '</span></div>';
+    }
+    h += '<div class="fin-row fin-total"><span style="font-size:.85rem;font-weight:600;color:#f0ede8">Total semanal</span>' +
+      '<span class="fv g">R$ ' + total.toFixed(2) + '</span></div>';
+    el.innerHTML = h;
+  }
+
+  function renderPlanQs() {
+    var el = document.getElementById('pqs');
+    if (el.children.length) return;
+    PQ.forEach(function (q) {
+      var d = document.createElement('div');
+      var p = document.createElement('div'); p.className = 'pq'; p.textContent = q.l;
+      var tx = document.createElement('textarea'); tx.rows = 2; tx.placeholder = 'Escreva aqui...';
+      tx.value = S.pq[q.k] || '';
+      tx.addEventListener('input', function () { S.pq[q.k] = tx.value; saveState(); });
+      d.appendChild(p); d.appendChild(tx); el.appendChild(d);
+    });
+  }
+
+  function renderWeek() {
+    var wg = document.getElementById('wg');
+    var h = '';
+    for (var i = 1; i <= 5; i++) {
+      var td = dow === i;
+      h += '<div class="dc' + (td ? ' td' : '') + '">' +
+        '<div class="dc-name">' + DSHORT[i] + '</div>' +
+        '<div class="dc-theme">' + THEMES[i] + '</div></div>';
+    }
+    wg.innerHTML = h;
+    var wp = document.getElementById('wp');
+    var rows = '', tot = 0;
+    for (var j = 1; j <= 5; j++) {
+      var dd = new Date(now); dd.setDate(now.getDate() - (dow - j));
+      var kk = dd.toISOString().slice(0, 10);
+      var rec = S.sem[kk];
+      var v = rec ? rec.b - rec.c - rec.o : null;
+      if (v && v > 0) tot += v;
+      rows += '<div class="fin-row"><span class="fl">' + DNAMES[j] + '</span>' +
+        '<span class="fv' + (v && v > 0 ? ' g' : '') + '">' +
+        (v && v > 0 ? 'R$ ' + v.toFixed(2) : '—') + '</span></div>';
+    }
+    rows += '<div class="fin-row fin-total"><span style="font-size:.85rem;font-weight:600;color:#f0ede8">Total semanal</span>' +
+      '<span class="fv g">R$ ' + tot.toFixed(2) + '</span></div>';
+    wp.innerHTML = rows;
+  }
+
+  // Finance inputs
+  ['f0', 'f1', 'f2', 'f3'].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.value = id === 'f0' ? (S.fin.b || 0) :
+               id === 'f1' ? (S.fin.c || 0) :
+               id === 'f2' ? (S.fin.k || 0) : (S.fin.o || 0);
+    el.addEventListener('input', calcFin);
+  });
+
+  document.getElementById('btnSalvar').addEventListener('click', function () {
+    S.sem[todayKey] = { b: S.fin.b, c: S.fin.c, k: S.fin.k, o: S.fin.o };
+    saveState(); renderSemAcc(); renderWeek();
+    var btn = document.getElementById('btnSalvar');
+    btn.textContent = '✓ Salvo!'; btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = '💾 Salvar registro do dia'; btn.classList.remove('ok'); }, 1800);
+  });
+
+  document.getElementById('btnPlan').addEventListener('click', function () {
+    saveState();
+    var btn = document.getElementById('btnPlan');
+    btn.textContent = '✓ Salvo!'; btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = '💾 Salvar planejamento'; btn.classList.remove('ok'); }, 1800);
+  });
+
+  // Init
+  updateMetrics();
+  renderTimeline();
+  renderChecklist();
+  renderAnalise();
+  renderPlanQs();
+  renderWeek();
+  renderSemAcc();
+  calcFin();
+})();
+</script>
+</body>
+</html>
